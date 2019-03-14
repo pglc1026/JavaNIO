@@ -42,7 +42,7 @@ Selector运行单线程处理多个Channel，如果你的应用打开了多个�
 
 首先，案例1是采用FileInputStream读取文件内容的：
 
-```
+```java
     public static void method2(){
         InputStream in = null;
         try{
@@ -74,7 +74,7 @@ Selector运行单线程处理多个Channel，如果你的应用打开了多个�
 
 案例是对应的NIO（这里通过RandomAccessFile进行操作，当然也可以通过FileInputStream.getChannel()进行操作）：
 
-```
+```java
     public static void method1(){
         RandomAccessFile aFile = null;
         try{
@@ -163,8 +163,8 @@ Buffer顾名思义：缓冲区，实际上是一个容器，一个连续数组�
 
 说完了FileChannel和Buffer, 大家应该对Buffer的用法比较了解了，这里使用SocketChannel来继续探讨NIO。NIO的强大功能部分来自于Channel的非阻塞特性，套接字的某些操作可能会无限期地阻塞。例如，对accept()方法的调用可能会因为等待一个客户端连接而阻塞；对read()方法的调用可能会因为没有数据可读而阻塞，直到连接的另一端传来新的数据。总的来说，创建/接收连接或读写数据等I/O调用，都可能无限期地阻塞等待，直到底层的网络实现发生了什么。慢速的，有损耗的网络，或仅仅是简单的网络故障都可能导致任意时间的延迟。然而不幸的是，在调用一个方法之前无法知道其是否阻塞。NIO的channel抽象的一个重要特征就是可以通过配置它的阻塞行为，以实现非阻塞式的信道。
 
-```
-            channel.configureBlocking(false)
+```java
+channel.configureBlocking(false)
 ```
 
 在非阻塞式信道上调用一个方法总是会立即返回。这种调用的返回值指示了所请求的操作完成的程度。例如，在一个非阻塞式ServerSocketChannel上调用accept()方法，如果有连接请求来了，则返回客户端SocketChannel，否则返回null。
@@ -172,7 +172,7 @@ Buffer顾名思义：缓冲区，实际上是一个容器，一个连续数组�
 这里先举一个TCP应用案例，客户端采用NIO实现，而服务端依旧使用BIO实现。
 客户端代码（案例3）：
 
-```
+```java
     public static void client(){
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         SocketChannel socketChannel = null;
@@ -216,7 +216,7 @@ Buffer顾名思义：缓冲区，实际上是一个容器，一个连续数组�
 
 服务端代码（案例4）：
 
-```
+```java
     public static void server(){
         ServerSocket serverSocket = null;
         InputStream in = null;
@@ -261,28 +261,28 @@ Buffer顾名思义：缓冲区，实际上是一个容器，一个连续数组�
 根据案例分析，总结一下SocketChannel的用法。
 打开SocketChannel：
 
-```
-            socketChannel = SocketChannel.open();
-            socketChannel.connect(new InetSocketAddress("10.10.195.115",8080));
+```java
+socketChannel = SocketChannel.open();
+socketChannel.connect(new InetSocketAddress("10.10.195.115",8080));
 ```
 
 关闭：
 
 ```
-            socketChannel.close();
+socketChannel.close();
 ```
 
 读取数据：
 
-```
-                    String info = "I'm "+i+++"-th information from client";
-                    buffer.clear();
-                    buffer.put(info.getBytes());
-                    buffer.flip();
-                    while(buffer.hasRemaining()){
-                        System.out.println(buffer);
-                        socketChannel.write(buffer);
-                    }
+```java
+String info = "I'm "+i+++"-th information from client";
+buffer.clear();
+buffer.put(info.getBytes());
+buffer.flip();
+while(buffer.hasRemaining()){
+    System.out.println(buffer);
+    socketChannel.write(buffer);
+}
 ```
 
 注意SocketChannel.write()方法的调用是在一个while循环中的。write()方法无法保证能写多少字节到SocketChannel。所以，我们重复调用write()直到Buffer没有要写的字节为止。
@@ -298,7 +298,7 @@ Buffer顾名思义：缓冲区，实际上是一个容器，一个连续数组�
 
 下面将上面的TCP服务端代码改写成NIO的方式（案例5）：
 
-```
+```java
 public class ServerConnect
 {
     private static final int BUF_SIZE=1024;
@@ -396,19 +396,19 @@ public class ServerConnect
 
 打开ServerSocketChannel：
 
-```
+```java
 ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
 ```
 
 关闭ServerSocketChannel：
 
-```
+```java
 serverSocketChannel.close();
 ```
 
 监听新进来的连接：
 
-```
+```java
 while(true){
     SocketChannel socketChannel = serverSocketChannel.accept();
 }
@@ -416,18 +416,18 @@ while(true){
 
 ServerSocketChannel可以设置成非阻塞模式。在非阻塞模式下，accept() 方法会立刻返回，如果还没有新进来的连接,返回的将是null。 因此，需要检查返回的SocketChannel是否是null.如：
 
-```
-        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-        serverSocketChannel.socket().bind(new InetSocketAddress(9999));
-        serverSocketChannel.configureBlocking(false);
-        while (true)
+```java
+ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+serverSocketChannel.socket().bind(new InetSocketAddress(9999));
+serverSocketChannel.configureBlocking(false);
+while (true)
+    {
+        SocketChannel socketChannel = serverSocketChannel.accept();
+        if (socketChannel != null)
         {
-            SocketChannel socketChannel = serverSocketChannel.accept();
-            if (socketChannel != null)
-            {
                 // do something with socketChannel...
-            }
         }
+    }
 ```
 
 ### Selector
@@ -436,18 +436,18 @@ Selector的创建：Selector selector = Selector.open();
 
 为了将Channel和Selector配合使用，必须将Channel注册到Selector上，通过SelectableChannel.register()方法来实现，沿用案例5中的部分代码：
 
-```
-            ssc= ServerSocketChannel.open();
-            ssc.socket().bind(new InetSocketAddress(PORT));
-            ssc.configureBlocking(false);
-            ssc.register(selector, SelectionKey.OP_ACCEPT);
+```java
+ssc= ServerSocketChannel.open();
+ssc.socket().bind(new InetSocketAddress(PORT));
+ssc.configureBlocking(false);
+ssc.register(selector, SelectionKey.OP_ACCEPT);
 ```
 
 与Selector一起使用时，Channel必须处于非阻塞模式下。这意味着不能将FileChannel与Selector一起使用，因为FileChannel不能切换到非阻塞模式。而套接字通道都可以。
 
 注意register()方法的第二个参数。这是一个“interest集合”，意思是在通过Selector监听Channel时对什么事件感兴趣。可以监听四种不同类型的事件：
 
-```
+```java
 1. Connect
 2. Accept
 3. Read
@@ -458,7 +458,7 @@ Selector的创建：Selector selector = Selector.open();
 
 这四种事件用SelectionKey的四个常量来表示：
 
-```
+```java
 1. SelectionKey.OP_CONNECT
 2. SelectionKey.OP_ACCEPT
 3. SelectionKey.OP_READ
@@ -479,13 +479,13 @@ interest集合：就像向Selector注册通道一节中所描述的，interest�
 
 ready 集合是通道已经准备就绪的操作的集合。在一次选择(Selection)之后，你会首先访问这个ready set。Selection将在下一小节进行解释。可以这样访问ready集合：
 
-```
+```java
 int readySet = selectionKey.readyOps();
 ```
 
 可以用像检测interest集合那样的方法，来检测channel中什么事件或操作已经就绪。但是，也可以使用以下四个方法，它们都会返回一个布尔类型：
 
-```
+```java
 selectionKey.isAcceptable();
 selectionKey.isConnectable();
 selectionKey.isReadable();
@@ -494,21 +494,21 @@ selectionKey.isWritable();
 
 从SelectionKey访问Channel和Selector很简单。如下：
 
-```
+```java
 Channel  channel  = selectionKey.channel();
 Selector selector = selectionKey.selector();
 ```
 
 可以将一个对象或者更多信息附着到SelectionKey上，这样就能方便的识别某个给定的通道。例如，可以附加 与通道一起使用的Buffer，或是包含聚集数据的某个对象。使用方法如下：
 
-```
+```java
 selectionKey.attach(theObject);
 Object attachedObj = selectionKey.attachment();
 ```
 
 还可以在用register()方法向Selector注册Channel的时候附加对象。如：
 
-```
+```java
 SelectionKey key = channel.register(selector, SelectionKey.OP_READ, theObject);
 ```
 
@@ -530,7 +530,7 @@ select()方法返回的int值表示有多少通道已经就绪。亦即，自上
 
 一旦调用了select()方法，并且返回值表明有一个或更多个通道就绪了，然后可以通过调用selector的selectedKeys()方法，访问“已选择键集（selected key set）”中的就绪通道。如下所示：
 
-```
+```java
 Set selectedKeys = selector.selectedKeys();
 ```
 
@@ -572,7 +572,7 @@ MappedByteBuffer是ByteBuffer的子类，其扩充了三个方法：
 
 这里通过采用ByteBuffer和MappedByteBuffer分别读取大小约为5M的文件"src/1.ppt"来比较两者之间的区别，method3()是采用MappedByteBuffer读取的，method4()对应的是ByteBuffer。
 
-```
+```java
     public static void method4(){
         RandomAccessFile aFile = null;
         FileChannel fc = null;
@@ -636,9 +636,9 @@ MappedByteBuffer是ByteBuffer的子类，其扩充了三个方法：
 通过在入口函数main()中运行：
 
 ```
-        method3();
-        System.out.println("=============");
-        method4();
+method3();
+System.out.println("=============");
+method4();
 ```
 
 输出结果（运行在普通PC机上）：
@@ -677,7 +677,7 @@ scatter / gather经常用于需要将传输的数据分开处理的场合，例�
 
 案例：
 
-```
+```java
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -718,7 +718,7 @@ public class ScattingAndGather
 
 FileChannel的transferFrom()方法可以将数据从源通道传输到FileChannel中。
 
-```
+```java
     public static void method1(){
         RandomAccessFile fromFile = null;
         RandomAccessFile toFile = null;
@@ -799,7 +799,7 @@ transferTo()方法将数据从FileChannel传输到其他的channel中。
 
 Java NIO 管道是2个线程之间的单向数据连接。Pipe有一个source通道和一个sink通道。数据会被写到sink通道，从source通道读取。
 
-```
+```java
     public static void method1(){
         Pipe pipe = null;
         ExecutorService exec = Executors.newFixedThreadPool(2);
@@ -864,7 +864,7 @@ Java NIO 管道是2个线程之间的单向数据连接。Pipe有一个source通
 
 Java NIO中的DatagramChannel是一个能收发UDP包的通道。因为UDP是无连接的网络协议，所以不能像其它通道那样读取和写入。它发送和接收的是数据包。
 
-```
+```java
     public static void  reveive(){
         DatagramChannel channel = null;
         try{

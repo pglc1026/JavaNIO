@@ -122,7 +122,7 @@ Selector运行单线程处理多个Channel，如果你的应用打开了多个�
 
 Buffer顾名思义：缓冲区，实际上是一个容器，一个连续数组。Channel提供从文件、网络读取数据的渠道，但是读写的数据都必须经过Buffer。如下图：
 
-![img](https://github.com/pglc1026/JavaNIO/blob/master/pic3-1.jpg?raw=true)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic/pic3-1.jpg?raw=true)
 
 向Buffer中写数据：
 
@@ -143,15 +143,15 @@ Buffer顾名思义：缓冲区，实际上是一个容器，一个连续数组�
 | limit    | 缓冲区数组中不可操作的下一个元素的位置：limit<=capacity |
 | mark     | 用于记录当前position的前一个位置或者默认是-1            |
 
-![img](https://github.com/pglc1026/JavaNIO/blob/master/pic3-2.jpg?raw=true)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic/pic3-2.jpg?raw=true)
 
 无图无真相，举例：我们通过ByteBuffer.allocate(11)方法创建了一个11个byte的数组的缓冲区，初始状态如上图，position的位置为0，capacity和limit默认都是数组长度。当我们写入5个字节时，变化如下图：
 
-![img](https://github.com/pglc1026/JavaNIO/blob/master/pic3-3.jpg?raw=true)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic/pic3-3.jpg?raw=true)
 
 这时我们需要将缓冲区中的5个字节数据写入Channel的通信信道，所以我们调用ByteBuffer.flip()方法，变化如下图所示(position设回0，并将limit设成之前的position的值)：
 
-![img](https://github.com/pglc1026/JavaNIO/blob/master/pic3-4.jpg?raw=true)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic/pic3-4.jpg?raw=true)
 
 这时底层操作系统就可以从缓冲区中正确读取这个5个字节数据并发送出去了。在下一次写数据之前我们再调用clear()方法，缓冲区的索引位置又回到了初始位置。
 

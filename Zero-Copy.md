@@ -11,7 +11,7 @@ write(socket, temp_buf, len);
 
 首先调用read将静态内容，这里假设为文件A，读取到temp_buf，然后调用write将temp_buf写入到socket中，如图：
 
-![img](https://github.com/pglc1026/JavaNIO/blob/master/pic1.jpg?raw=true)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic/pic1.jpg?raw=true)
 
 在这个过程中，文件A经历了4次copy过程：
 
@@ -47,11 +47,11 @@ ssize_t sendfile(int out_fd, int in_fd, off_t * offset, size_t count);
 
 下图展示了在transferTo()之后的数据流向：
 
-![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2.jpg?raw=true)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic/pic2.jpg?raw=true)
 
 下图展示了在使用transferTo()之后的上下文切换：
 
-![img](https://github.com/pglc1026/JavaNIO/blob/master/pic3.jpg?raw=true)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic/pic3.jpg?raw=true)
 
 使用了Zero-Copy技术后，整个过程如下：
 
@@ -77,7 +77,7 @@ sendfile(socket, file, len);
 
 该函数通过一次调用就完成了文件的传送，减少了原来read/write方式的模式切换。此外更减少了数据copy，sendfile()的详细过程如图：
 
-![img](https://github.com/pglc1026/JavaNIO/blob/master/pic4.jpg?raw=true)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic/pic4.jpg?raw=true)
 
 通过sendfile()传送文件只需要一次系统调用，当sendfile时：
 
@@ -95,7 +95,7 @@ sendfile()与read/write模式相比，少了一次copy。但是从上述过程�
 
 Linux 2.4内核对sendfile()做了改进，如图：
 
-![img](https://github.com/pglc1026/JavaNIO/blob/master/pic5.jpg?raw=true)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic/pic5.jpg?raw=true)
 
 改进后的处理过程如下：
 
@@ -109,7 +109,7 @@ Linux 2.4内核对sendfile()做了改进，如图：
 
 正式Linux 2.4的内核做了改进，Java中的transferTo()实现了Zero-Copy，如下图：
 
-![img](https://github.com/pglc1026/JavaNIO/blob/master/pic6.jpg?raw=true)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic/pic6.jpg?raw=true)
 
 Zero-Copy技术的使用场景有很多，比如Kafka，又或者Netty等，可以大大提升程序的性能。
 

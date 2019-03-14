@@ -6,13 +6,13 @@
 
 空间分配如下图所示：
 
-![img](.\pic2-1.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-1.jpg?raw=true)
 
 有了用户空间和内核空间，整个Linux内部结构可以分为三部分，从最底层到最上层依次是：硬件 --> 内核空间 --> 用户空间。
 
 如下图所示：
 
-![img](.\pic2-2.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-2.jpg?raw=true)
 
 需要注意的细节问题，从上图可以看出内核的组成：
 
@@ -21,13 +21,13 @@
 
 ## Linux网络I/O模型
 
-![img](.\pic2-3.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-3.jpg?raw=true)
 
 我们都知道，为了OS的安全性等的考虑，进程是无法直接操作I/O设备的，其必须通过系统调用请求内核协助完成I/O动作，而内核回味每个I/O设备维护一个buffer。
 
 如若下图所示：
 
-![img](.\pic2-4.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-4.jpg?raw=true)
 
 整个请求过程为：用户进程发起请求，内核接受到请求后，从I/O设备中获取数据到buffer中，再将buffer中的数据copy到用户进程的地址空间，该用户进程获取到数据后再响应客户端。
 
@@ -43,9 +43,9 @@
 >
 >   本文的重要参考文献是Richard Stevens的“UNIX® Network Programming Volume 1, Third Edition: The Sockets Networking ”，6.2节“I/O Models ”。
 
-![img](.\pic2-5.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-5.jpg?raw=true)
 
-![img](.\pic2-6.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-6.jpg?raw=true)
 
 >   记住这两点很重要：
 >
@@ -56,7 +56,7 @@
 
 在Linux中，默认情况下所有的socket都是blocking，一个典型的读操作流程大概是这样：
 
-![img](.\pic2-7.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-7.jpg?raw=true)
 
 当用户进程调用了recvfrom这个系统调用，内核就开始了I/O的第一个阶段：等待数据准备。对于Network I/O来说，很多时候，数据在一开始还没有到达（比如，还没有收到一个完整的UDP包），这个时候内核就需要足够的数据到来。而在用户进程这边，整个进程会被阻塞。当内核一直等到数据准备好了，它就会将数据从内核中拷贝到用户内存，然后内核返回结果，用户进程才接触block的状态，重新运行起来。
 
@@ -66,7 +66,7 @@
 
 Linux下，可以通过设置socket使其变为Non-Blocking。当对一个Non-Blocking Socket执行读操作时，流程是这个样子：
 
-![img](.\pic2-8.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-8.jpg?raw=true)
 
 当用户进程调用recvfrom时，系统不会阻塞用户进程，而是立刻返回一个ewouldblock错误，从用户角度讲，并不需要等待，而是马上就得到了一个结果。当用户进程判断标志是ewouldblock时，就知道数据还没准备好，于是它就可以做其它事了，于是它可以再次发送recvfrom，一旦内核中的数据准备好了。并且又再次收到了用户进程的system call，那么它马上九江数据拷贝到了用户内存，然后返回。
 
@@ -76,7 +76,7 @@ Linux下，可以通过设置socket使其变为Non-Blocking。当对一个Non-Bl
 
 I/O Multiplexing这个词可能有点模式，但是如果说select，epoll，大概就都能明白了。有些地方也成这种I/O方式为Event Driven I/O。我们都知道，select/epoll的好处就在于单个process可以同时处理多个网络连接的I/O。他的基本原理就是select/epoll这个function会不断轮询所负责的所有socket，当某个socket有数据到达了，就通知用户进程。它的流程如图：
 
-![img](.\pic2-9.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-9.jpg?raw=true)
 
 当用户调用了select，那么整个进程会被Block，而同时，内核会“监视”所有select负责的Socket，当任何一个Socket中的数据准备好了，Select就会返回。这个时候用户进程再调用read操作，将数据从内核拷贝到用户进程。
 
@@ -118,7 +118,7 @@ epoll是在2.6内核中提出的，是之前的select和poll的增强版本。�
 
 >   由于signal driven IO在实际中并不常用，所以简单提下。
 
-![img](.\pic2-10.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-10.jpg?raw=true)
 
 很明显可以看出用户进程不是阻塞的。首先用户进程建立SIGIO信号处理程序，并通过系统调用sigaction执行一个信号处理函数，这时用户进程便可以做其他的事了，一旦数据准备好，系统便为该进程生成一个SIGIO信号，去通知它数据已经准备好了，于是用户进程便调用recvfrom把数据从内核拷贝出来，并返回结果。
 
@@ -126,7 +126,7 @@ epoll是在2.6内核中提出的，是之前的select和poll的增强版本。�
 
 一般来说，这些函数通过告诉内核启动操作并在整个操作（包括内核的数据到缓冲区的副本）完成时通知我们。这个模型和前面的信号驱动I/O模型的主要区别是，在信号驱动的I/O中，内核告诉我们何时可以**启动**I/O操作，但是异步I/O时，内核告诉我们何时I/O**操作完成**。
 
-![img](.\pic2-11.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-11.jpg?raw=true)
 
 当用户进程向内核发起某个操作后，会立刻得到返回，并把所有的任务都交给内核去完成（包括将数据从内核拷贝到用户自己的缓冲区），内核完成之后，只需返回一个信号告诉用户进程已经完成就可以了。
 
@@ -134,21 +134,21 @@ epoll是在2.6内核中提出的，是之前的select和poll的增强版本。�
 
 ## 5种I/O模型的对比
 
-![img](.\pic2-14.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-14.jpg?raw=true)
 
 
 
 >   **结果表明：**前四个模型之间的主要区别是第一阶段，四个模型的第二阶段是一样的：过程受阻在调用recvfrom当数据从内核拷贝到用户缓冲区。然而，异步I/O处理两个阶段，与前四个不同。
 
-![img](.\pic2-12.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-12.jpg?raw=true)
 
 **从同步、异步，以及阻塞、非阻塞两个维度来划分来看：**
 
-![img](.\pic2-13.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-13.jpg?raw=true)
 
 ## 零拷贝
 
-![img](.\pic2-15.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-15.jpg?raw=true)
 
 CPU不执行拷贝数据从一个存储区域到另一个存储区域的任务，这通常用于在网络上传输文件时节省CPU周期和内存带宽。
 
@@ -170,7 +170,7 @@ CPU不执行拷贝数据从一个存储区域到另一个存储区域的任务�
 
 >   注意，对于各种零拷贝机制是否能够实现都是依赖于操作系统底层是否提供相应的支持。
 
-![img](.\pic2-16.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-16.jpg?raw=true)
 
 当应用程序访问某块数据时，操作系统首先会检查，是不是最近访问过此文件，文件内容是否缓存在内核缓冲区，如果是，操作系统则直接根据read系统调用提供的buf地址，将内核缓冲区的内容拷贝到buf所指定的用户空间缓冲区中去。如果不是，操作系统则首先将磁盘上的数据拷贝的内核缓冲区，这一步目前主要依靠DMA来传输，然后再把内核缓冲区上的内容拷贝到用户缓冲区中。 接下来，write系统调用再把用户缓冲区的内容拷贝到网络堆栈相关的内核缓冲区中，最后socket再把内核缓冲区的内容发送到网卡上。
 
@@ -188,7 +188,7 @@ buf = mmap(diskfd, len);write(sockfd, buf, len);
 
 同样的，看图很简单：
 
-![img](.\pic2-17.jpg)
+![img](https://github.com/pglc1026/JavaNIO/blob/master/pic2-17.jpg?raw=true)
 
 使用mmap替代read很明显减少了一次拷贝，当拷贝数据量很大时，无疑提升了效率。但是使用 `mmap`是有代价的。当你使用 `mmap`时，你可能会遇到一些隐藏的陷阱。例如，当你的程序 `mmap`了一个文件，但是当这个文件被另一个进程截断(truncate)时, write系统调用会因为访问非法地址而被 `SIGBUS`信号终止。 `SIGBUS`信号默认会杀死你的进程并产生一个 `coredump`,如果你的服务器这样被中止了，那会产生一笔损失。
 

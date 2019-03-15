@@ -80,7 +80,7 @@ I/O Multiplexing这个词可能有点模式，但是如果说select，epoll，�
 
 当用户调用了select，那么整个进程会被Block，而同时，内核会“监视”所有select负责的Socket，当任何一个Socket中的数据准备好了，Select就会返回。这个时候用户进程再调用read操作，将数据从内核拷贝到用户进程。
 
-这个图和Blocking I/O的图其实并没有太大的不同，事实上，还更差一些。因为这里需要使用两个system call (select 和 recvfrom)，而Blocking I、O只调用了一个system call (recvfrom)。但是，用select的优势在于它可以同时处理多个connection。（多说一句：所以，如果处理的连接数不是很高的话，使用select/epoll的web server不一定比使用multi-threading + Blocking I/O的web server性能更好，可能延迟还更大。select/epoll的优势并不是对于单个连接能处理得更快，而是在于能处理<strong>更多</strong>的连接。）
+这个图和Blocking I/O的图其实并没有太大的不同，事实上，还更差一些。因为这里需要使用两个system call (select 和 recvfrom)，而Blocking I/O只调用了一个system call (recvfrom)。但是，用select的优势在于它可以同时处理多个connection。（多说一句：所以，如果处理的连接数不是很高的话，使用select/epoll的web server不一定比使用multi-threading + Blocking I/O的web server性能更好，可能延迟还更大。select/epoll的优势并不是对于单个连接能处理得更快，而是在于能处理<strong>更多</strong>的连接。）
 
 在I/O Multiplexing Model中，实际中，对于每一个socket，一般都设置成为non-blocking，但是，如上图所示，整个用户的process其实是一直被block的。只不过process是被select这个函数block，而不是被socket I/O给Block。
 

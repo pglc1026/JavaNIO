@@ -8,9 +8,9 @@
 
 ## 一、概述
 
-NIO主要有三大核心部分：Channel(通道)，Buffer(缓冲区), Selector。传统IO基于字节流和字符流进行操作，而NIO基于Channel和Buffer(缓冲区)进行操作，数据总是从通道读取到缓冲区中，或者从缓冲区写入到通道中。Selector(选择区)用于监听多个通道的事件（比如：连接打开，数据到达）。因此，单个线程可以监听多个数据通道。
+NIO主要有三大核心部分：Channel(通道)，Buffer(缓冲区)，Selector。传统IO基于字节流和字符流进行操作，而NIO基于Channel和Buffer(缓冲区)进行操作，数据总是从通道读取到缓冲区中，或者从缓冲区写入到通道中。Selector(选择区)用于监听多个通道的事件（比如：连接打开，数据到达）。因此，单个线程可以监听多个数据通道。
 
-NIO和传统IO（一下简称IO）之间第一个最大的区别是，IO是面向流的，NIO是面向缓冲区的。 Java IO面向流意味着每次从流中读一个或多个字节，直至读取所有字节，它们没有被缓存在任何地方。此外，它不能前后移动流中的数据。如果需要前后移动从流中读取的数据，需要先将它缓存到一个缓冲区。NIO的缓冲导向方法略有不同。数据读取到一个它稍后处理的缓冲区，需要时可在缓冲区中前后移动。这就增加了处理过程中的灵活性。但是，还需要检查是否该缓冲区中包含所有您需要处理的数据。而且，需确保当更多的数据读入缓冲区时，不要覆盖缓冲区里尚未处理的数据。
+NIO和传统IO（一下简称IO）之间第一个最大的区别是，IO是面向流的，NIO是面向缓冲区的。 Java IO面向流意味着每次从流中读一个或多个字节，直至读取所有字节，它们没有被缓存在任何地方。此外，它不能前后移动流中的数据。如果需要前后移动从流中读取的数据，需要先将它缓存到一个缓冲区。NIO的缓冲导向方法略有不同。数据读取到一个它稍后处理的缓冲区，需要时可在缓冲区中前后移动。这就增加了处理过程中的灵活性。但是，还需要检查是否该缓冲区中包含所有你需要处理的数据。而且，需确保当更多的数据读入缓冲区时，不要覆盖缓冲区里尚未处理的数据。
 
 IO的各种流是阻塞的。这意味着，当一个线程调用read() 或 write()时，该线程被阻塞，直到有一些数据被读取，或数据完全写入。该线程在此期间不能再干任何事情了。 NIO的非阻塞模式，使一个线程从某通道发送请求读取数据，但是它仅能得到目前可用的数据，如果目前没有数据可用时，就什么都不会获取。而不是保持线程阻塞，所以直至数据变得可以读取之前，该线程可以继续做其他的事情。 非阻塞写也是如此。一个线程请求写入一些数据到某通道，但不需要等待它完全写入，这个线程同时可以去做别的事情。 线程通常将非阻塞IO的空闲时间用于在其它通道上执行IO操作，所以一个单独的线程现在可以管理多个输入和输出通道（channel）。
 
@@ -43,27 +43,25 @@ Selector运行单线程处理多个Channel，如果你的应用打开了多个�
 首先，案例1是采用FileInputStream读取文件内容的：
 
 ```java
-    public static void method2(){
+    public static void method2() {
         InputStream in = null;
-        try{
+        try {
             in = new BufferedInputStream(new FileInputStream("src/nomal_io.txt"));
             byte [] buf = new byte[1024];
             int bytesRead = in.read(buf);
-            while(bytesRead != -1)
-            {
+            while(bytesRead != -1) {
                 for(int i=0;i<bytesRead;i++)
                     System.out.print((char)buf[i]);
                 bytesRead = in.read(buf);
             }
-        }catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
-        }finally{
-            try{
-                if(in != null){
+        } finally {
+            try {
+                if(in != null) {
                     in.close();
                 }
-            }catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -75,32 +73,30 @@ Selector运行单线程处理多个Channel，如果你的应用打开了多个�
 案例是对应的NIO（这里通过RandomAccessFile进行操作，当然也可以通过FileInputStream.getChannel()进行操作）：
 
 ```java
-    public static void method1(){
+    public static void method1() {
         RandomAccessFile aFile = null;
-        try{
+        try {
             aFile = new RandomAccessFile("src/nio.txt","rw");
             FileChannel fileChannel = aFile.getChannel();
             ByteBuffer buf = ByteBuffer.allocate(1024);
             int bytesRead = fileChannel.read(buf);
             System.out.println(bytesRead);
-            while(bytesRead != -1)
-            {
+            while (bytesRead != -1) {
                 buf.flip();
-                while(buf.hasRemaining())
-                {
+                while(buf.hasRemaining()) {
                     System.out.print((char)buf.get());
                 }
                 buf.compact();
                 bytesRead = fileChannel.read(buf);
             }
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
-        }finally{
-            try{
-                if(aFile != null){
+        } finally {
+            try {
+                if(aFile != null) {
                     aFile.close();
                 }
-            }catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -132,7 +128,7 @@ Buffer顾名思义：缓冲区，实际上是一个容器，一个连续数组�
 从Buffer中读取数据：
 
 -   从Buffer读取到Channel (channel.write(buf))
--   使用get()方法从Buffer中读取数据 （buf.get()）
+-   使用get()方法从Buffer中读取数据（buf.get()）
 
 可以把Buffer简单地理解为一组基本数据类型的元素列表，它通过几个变量来保存这个数据的当前位置状态：capacity, position, limit, mark：
 
@@ -176,38 +172,33 @@ channel.configureBlocking(false)
     public static void client(){
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         SocketChannel socketChannel = null;
-        try
-        {
+        try {
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(false);
-            socketChannel.connect(new InetSocketAddress("10.10.195.115",8080));
-            if(socketChannel.finishConnect())
-            {
-                int i=0;
-                while(true)
-                {
+            socketChannel.connect(new InetSocketAddress("10.10.195.115", 8080));
+            if (socketChannel.finishConnect()) {
+                int i = 0;
+                while (true) {
                     TimeUnit.SECONDS.sleep(1);
-                    String info = "I'm "+i+++"-th information from client";
+                    String info = "I'm " + i++ + "-th information from client";
                     buffer.clear();
                     buffer.put(info.getBytes());
                     buffer.flip();
-                    while(buffer.hasRemaining()){
+                    while (buffer.hasRemaining()) {
                         System.out.println(buffer);
                         socketChannel.write(buffer);
                     }
                 }
             }
         }
-        catch (IOException | InterruptedException e)
-        {
+        catch (IOException | InterruptedException e) {
             e.printStackTrace();
-        }
-        finally{
-            try{
-                if(socketChannel!=null){
+        } finally {
+            try {
+                if(socketChannel!=null) {
                     socketChannel.close();
                 }
-            }catch(IOException e){
+            } catch(IOException e) {
                 e.printStackTrace();
             }
         }
@@ -225,31 +216,29 @@ channel.configureBlocking(false)
             serverSocket = new ServerSocket(8080);
             int recvMsgSize = 0;
             byte[] recvBuf = new byte[1024];
-            while(true){
+            while (true) {
                 Socket clntSocket = serverSocket.accept();
                 SocketAddress clientAddress = clntSocket.getRemoteSocketAddress();
-                System.out.println("Handling client at "+clientAddress);
+                System.out.println("Handling client at " + clientAddress);
                 in = clntSocket.getInputStream();
-                while((recvMsgSize=in.read(recvBuf))!=-1){
+                while ((recvMsgSize = in.read(recvBuf)) != -1) {
                     byte[] temp = new byte[recvMsgSize];
                     System.arraycopy(recvBuf, 0, temp, 0, recvMsgSize);
                     System.out.println(new String(temp));
                 }
             }
         }
-        catch (IOException e)
-        {
+        catch (IOException e) {
             e.printStackTrace();
-        }
-        finally{
-            try{
-                if(serverSocket!=null){
+        } finally {
+            try {
+                if(serverSocket!=null) {
                     serverSocket.close();
                 }
-                if(in!=null){
+                if (in!=null) {
                     in.close();
                 }
-            }catch(IOException e){
+            } catch(IOException e) {
                 e.printStackTrace();
             }
         }
@@ -268,7 +257,7 @@ socketChannel.connect(new InetSocketAddress("10.10.195.115",8080));
 
 关闭：
 
-```
+```java
 socketChannel.close();
 ```
 
@@ -279,7 +268,7 @@ String info = "I'm "+i+++"-th information from client";
 buffer.clear();
 buffer.put(info.getBytes());
 buffer.flip();
-while(buffer.hasRemaining()){
+while (buffer.hasRemaining()) {
     System.out.println(buffer);
     socketChannel.write(buffer);
 }
@@ -299,43 +288,41 @@ while(buffer.hasRemaining()){
 下面将上面的TCP服务端代码改写成NIO的方式（案例5）：
 
 ```java
-public class ServerConnect
-{
+public class ServerConnect {
     private static final int BUF_SIZE=1024;
     private static final int PORT = 8080;
     private static final int TIMEOUT = 3000;
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         selector();
     }
-    public static void handleAccept(SelectionKey key) throws IOException{
+    public static void handleAccept(SelectionKey key) throws IOException {
         ServerSocketChannel ssChannel = (ServerSocketChannel)key.channel();
         SocketChannel sc = ssChannel.accept();
         sc.configureBlocking(false);
         sc.register(key.selector(), SelectionKey.OP_READ,ByteBuffer.allocateDirect(BUF_SIZE));
     }
-    public static void handleRead(SelectionKey key) throws IOException{
+    public static void handleRead(SelectionKey key) throws IOException {
         SocketChannel sc = (SocketChannel)key.channel();
         ByteBuffer buf = (ByteBuffer)key.attachment();
         long bytesRead = sc.read(buf);
-        while(bytesRead>0){
+        while (bytesRead>0) {
             buf.flip();
-            while(buf.hasRemaining()){
+            while(buf.hasRemaining()) {
                 System.out.print((char)buf.get());
             }
             System.out.println();
             buf.clear();
             bytesRead = sc.read(buf);
         }
-        if(bytesRead == -1){
+        if (bytesRead == -1) {
             sc.close();
         }
     }
-    public static void handleWrite(SelectionKey key) throws IOException{
+    public static void handleWrite(SelectionKey key) throws IOException {
         ByteBuffer buf = (ByteBuffer)key.attachment();
         buf.flip();
         SocketChannel sc = (SocketChannel) key.channel();
-        while(buf.hasRemaining()){
+        while (buf.hasRemaining()) {
             sc.write(buf);
         }
         buf.compact();
@@ -343,46 +330,46 @@ public class ServerConnect
     public static void selector() {
         Selector selector = null;
         ServerSocketChannel ssc = null;
-        try{
+        try {
             selector = Selector.open();
-            ssc= ServerSocketChannel.open();
+            ssc = ServerSocketChannel.open();
             ssc.socket().bind(new InetSocketAddress(PORT));
             ssc.configureBlocking(false);
             ssc.register(selector, SelectionKey.OP_ACCEPT);
-            while(true){
-                if(selector.select(TIMEOUT) == 0){
+            while (true) {
+                if (selector.select(TIMEOUT) == 0){
                     System.out.println("==");
                     continue;
                 }
                 Iterator<SelectionKey> iter = selector.selectedKeys().iterator();
-                while(iter.hasNext()){
+                while (iter.hasNext()) {
                     SelectionKey key = iter.next();
-                    if(key.isAcceptable()){
+                    if (key.isAcceptable()) {
                         handleAccept(key);
                     }
-                    if(key.isReadable()){
+                    if (key.isReadable()) {
                         handleRead(key);
                     }
-                    if(key.isWritable() && key.isValid()){
+                    if (key.isWritable() && key.isValid()) {
                         handleWrite(key);
                     }
-                    if(key.isConnectable()){
+                    if (key.isConnectable()) {
                         System.out.println("isConnectable = true");
                     }
                     iter.remove();
                 }
             }
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
-        }finally{
-            try{
-                if(selector!=null){
+        } finally {
+            try {
+                if (selector!=null) {
                     selector.close();
                 }
-                if(ssc!=null){
+                if (ssc!=null) {
                     ssc.close();
                 }
-            }catch(IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -409,7 +396,7 @@ serverSocketChannel.close();
 监听新进来的连接：
 
 ```java
-while(true){
+while (true) {
     SocketChannel socketChannel = serverSocketChannel.accept();
 }
 ```
@@ -420,14 +407,12 @@ ServerSocketChannel可以设置成非阻塞模式。在非阻塞模式下，acce
 ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
 serverSocketChannel.socket().bind(new InetSocketAddress(9999));
 serverSocketChannel.configureBlocking(false);
-while (true)
-    {
-        SocketChannel socketChannel = serverSocketChannel.accept();
-        if (socketChannel != null)
-        {
-                // do something with socketChannel...
-        }
+while (true) {
+    SocketChannel socketChannel = serverSocketChannel.accept();
+    if (socketChannel != null) {
+        // do something with socketChannel...
     }
+}
 ```
 
 ### Selector
@@ -437,7 +422,7 @@ Selector的创建：Selector selector = Selector.open();
 为了将Channel和Selector配合使用，必须将Channel注册到Selector上，通过SelectableChannel.register()方法来实现，沿用案例5中的部分代码：
 
 ```java
-ssc= ServerSocketChannel.open();
+ssc = ServerSocketChannel.open();
 ssc.socket().bind(new InetSocketAddress(PORT));
 ssc.configureBlocking(false);
 ssc.register(selector, SelectionKey.OP_ACCEPT);

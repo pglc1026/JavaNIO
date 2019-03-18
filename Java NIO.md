@@ -543,9 +543,9 @@ SocketChannel的读写是通过一个类叫ByteBuffer来操作的.这个类本�
 
 FileChannel提供了map方法来把文件影射为内存映像文件： MappedByteBuffer map(int mode,long position,long size); 可以把文件的从position开始的size大小的区域映射为内存映像文件，mode指出了 可访问该内存映像文件的方式：
 
--   READ_ONLY,（只读）： 试图修改得到的缓冲区将导致抛出 ReadOnlyBufferException.(MapMode.READ_ONLY)
--   READ_WRITE（读/写）： 对得到的缓冲区的更改最终将传播到文件；该更改对映射到同一文件的其他程序不一定是可见的。 (MapMode.READ_WRITE)
--   PRIVATE（专用）： 对得到的缓冲区的更改不会传播到文件，并且该更改对映射到同一文件的其他程序也不是可见的；相反，会创建缓冲区已修改部分的专用副本。 (MapMode.PRIVATE)
+-   READ_ONLY,（只读）：试图修改得到的缓冲区将导致抛出 ReadOnlyBufferException.(MapMode.READ_ONLY)
+-   READ_WRITE（读/写）：对得到的缓冲区的更改最终将传播到文件；该更改对映射到同一文件的其他程序不一定是可见的。 (MapMode.READ_WRITE)
+-   PRIVATE（专用）：对得到的缓冲区的更改不会传播到文件，并且该更改对映射到同一文件的其他程序也不是可见的；相反，会创建缓冲区已修改部分的专用副本。 (MapMode.PRIVATE)
 
 MappedByteBuffer是ByteBuffer的子类，其扩充了三个方法：
 
@@ -558,10 +558,10 @@ MappedByteBuffer是ByteBuffer的子类，其扩充了三个方法：
 这里通过采用ByteBuffer和MappedByteBuffer分别读取大小约为5M的文件"src/1.ppt"来比较两者之间的区别，method3()是采用MappedByteBuffer读取的，method4()对应的是ByteBuffer。
 
 ```java
-    public static void method4(){
+    public static void method4() {
         RandomAccessFile aFile = null;
         FileChannel fc = null;
-        try{
+        try {
             aFile = new RandomAccessFile("src/1.ppt","rw");
             fc = aFile.getChannel();
             long timeBegin = System.currentTimeMillis();
@@ -573,25 +573,25 @@ MappedByteBuffer是ByteBuffer的子类，其扩充了三个方法：
             //System.out.println((char)buff.get((int)(aFile.length()/2)+1));
             long timeEnd = System.currentTimeMillis();
             System.out.println("Read time: "+(timeEnd-timeBegin)+"ms");
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
-        }finally{
-            try{
-                if(aFile!=null){
+        } finally {
+            try {
+                if (aFile!=null) {
                     aFile.close();
                 }
-                if(fc!=null){
+                if (fc!=null) {
                     fc.close();
                 }
-            }catch(IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
-    public static void method3(){
+    public static void method3() {
         RandomAccessFile aFile = null;
         FileChannel fc = null;
-        try{
+        try {
             aFile = new RandomAccessFile("src/1.ppt","rw");
             fc = aFile.getChannel();
             long timeBegin = System.currentTimeMillis();
@@ -601,17 +601,17 @@ MappedByteBuffer是ByteBuffer的子类，其扩充了三个方法：
             //System.out.println((char)mbb.get((int)(aFile.length()/2)+1));
             long timeEnd = System.currentTimeMillis();
             System.out.println("Read time: "+(timeEnd-timeBegin)+"ms");
-        }catch(IOException e){
+        } catch(IOException e) {
             e.printStackTrace();
-        }finally{
+        } finally {
             try{
-                if(aFile!=null){
+                if (aFile!=null) {
                     aFile.close();
                 }
-                if(fc!=null){
+                if (fc!=null) {
                     fc.close();
                 }
-            }catch(IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -671,13 +671,11 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.nio.channels.FileChannel;
-public class ScattingAndGather
-{
-    public static void main(String args[]){
+public class ScattingAndGather {
+    public static void main(String args[]) {
         gather();
     }
-    public static void gather()
-    {
+    public static void gather() {
         ByteBuffer header = ByteBuffer.allocate(10);
         ByteBuffer body = ByteBuffer.allocate(10);
         byte [] b1 = {'0', '1'};
@@ -685,14 +683,12 @@ public class ScattingAndGather
         header.put(b1);
         body.put(b2);
         ByteBuffer [] buffs = {header, body};
-        try
-        {
+        try {
             FileOutputStream os = new FileOutputStream("src/scattingAndGather.txt");
             FileChannel channel = os.getChannel();
             channel.write(buffs);
         }
-        catch (IOException e)
-        {
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -704,11 +700,10 @@ public class ScattingAndGather
 FileChannel的transferFrom()方法可以将数据从源通道传输到FileChannel中。
 
 ```java
-    public static void method1(){
+    public static void method1() {
         RandomAccessFile fromFile = null;
         RandomAccessFile toFile = null;
-        try
-        {
+        try {
             fromFile = new RandomAccessFile("src/fromFile.xml","rw");
             FileChannel fromChannel = fromFile.getChannel();
             toFile = new RandomAccessFile("src/toFile.txt","rw");
@@ -717,21 +712,19 @@ FileChannel的transferFrom()方法可以将数据从源通道传输到FileChanne
             long count = fromChannel.size();
             System.out.println(count);
             toChannel.transferFrom(fromChannel, position, count);
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        finally{
-            try{
-                if(fromFile != null){
+        finally {
+            try {
+                if (fromFile != null) {
                     fromFile.close();
                 }
-                if(toFile != null){
+                if (toFile != null) {
                     toFile.close();
                 }
             }
-            catch(IOException e){
+            catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -742,13 +735,11 @@ FileChannel的transferFrom()方法可以将数据从源通道传输到FileChanne
 
 transferTo()方法将数据从FileChannel传输到其他的channel中。
 
-```
-    public static void method2()
-    {
+``` java
+    public static void method2() {
         RandomAccessFile fromFile = null;
         RandomAccessFile toFile = null;
-        try
-        {
+        try {
             fromFile = new RandomAccessFile("src/fromFile.txt","rw");
             FileChannel fromChannel = fromFile.getChannel();
             toFile = new RandomAccessFile("src/toFile.txt","rw");
@@ -757,21 +748,17 @@ transferTo()方法将数据从FileChannel传输到其他的channel中。
             long count = fromChannel.size();
             System.out.println(count);
             fromChannel.transferTo(position, count,toChannel);
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
-        }
-        finally{
-            try{
-                if(fromFile != null){
+        } finally{
+            try {
+                if (fromFile != null) {
                     fromFile.close();
                 }
-                if(toFile != null){
+                if (toFile != null) {
                     toFile.close();
                 }
-            }
-            catch(IOException e){
+            } catch(IOException e){
                 e.printStackTrace();
             }
         }
@@ -785,16 +772,15 @@ transferTo()方法将数据从FileChannel传输到其他的channel中。
 Java NIO 管道是2个线程之间的单向数据连接。Pipe有一个source通道和一个sink通道。数据会被写到sink通道，从source通道读取。
 
 ```java
-    public static void method1(){
+    public static void method1() {
         Pipe pipe = null;
         ExecutorService exec = Executors.newFixedThreadPool(2);
-        try{
+        try {
             pipe = Pipe.open();
             final Pipe pipeTemp = pipe;
-            exec.submit(new Callable<Object>(){
+            exec.submit(new Callable<Object>() {
                 @Override
-                public Object call() throws Exception
-                {
+                public Object call() throws Exception {
                     Pipe.SinkChannel sinkChannel = pipeTemp.sink();//向通道中写数据
                     while(true){
                         TimeUnit.SECONDS.sleep(1);
@@ -810,10 +796,9 @@ Java NIO 管道是2个线程之间的单向数据连接。Pipe有一个source通
                     }
                 }
             });
-            exec.submit(new Callable<Object>(){
+            exec.submit(new Callable<Object>() {
                 @Override
-                public Object call() throws Exception
-                {
+                public Object call() throws Exception {
                     Pipe.SourceChannel sourceChannel = pipeTemp.source();//向通道中读数据
                     while(true){
                         TimeUnit.SECONDS.sleep(1);
@@ -837,9 +822,9 @@ Java NIO 管道是2个线程之间的单向数据连接。Pipe有一个source通
                     }
                 }
             });
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
-        }finally{
+        } finally {
             exec.shutdown();
         }
     }
@@ -850,9 +835,9 @@ Java NIO 管道是2个线程之间的单向数据连接。Pipe有一个source通
 Java NIO中的DatagramChannel是一个能收发UDP包的通道。因为UDP是无连接的网络协议，所以不能像其它通道那样读取和写入。它发送和接收的是数据包。
 
 ```java
-    public static void  reveive(){
+    public static void  reveive() {
         DatagramChannel channel = null;
-        try{
+        try {
             channel = DatagramChannel.open();
             channel.socket().bind(new InetSocketAddress(8888));
             ByteBuffer buf = ByteBuffer.allocate(1024);
@@ -863,21 +848,21 @@ Java NIO中的DatagramChannel是一个能收发UDP包的通道。因为UDP是无
                 System.out.print((char)buf.get());
             }
             System.out.println();
-        }catch(IOException e){
+        } catch(IOException e) {
             e.printStackTrace();
-        }finally{
-            try{
-                if(channel!=null){
+        } finally {
+            try {
+                if (channel!=null) {
                     channel.close();
                 }
-            }catch(IOException e){
+            } catch (IOException e){
                 e.printStackTrace();
             }
         }
     }
-    public static void send(){
+    public static void send() {
         DatagramChannel channel = null;
-        try{
+        try {
             channel = DatagramChannel.open();
             String info = "I'm the Sender!";
             ByteBuffer buf = ByteBuffer.allocate(1024);
@@ -886,14 +871,14 @@ Java NIO中的DatagramChannel是一个能收发UDP包的通道。因为UDP是无
             buf.flip();
             int bytesSent = channel.send(buf, new InetSocketAddress("10.10.195.115",8888));
             System.out.println(bytesSent);
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
-        }finally{
-            try{
-                if(channel!=null){
+        } finally {
+            try {
+                if (channel!=null) {
                     channel.close();
                 }
-            }catch(IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
